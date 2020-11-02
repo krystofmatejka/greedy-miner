@@ -1,5 +1,113 @@
 import React, {useRef, useEffect, useState} from 'react'
-import {Application, Loader} from 'pixi.js'
+import {Application, Loader, Sprite, utils, Graphics} from 'pixi.js'
+import {distance} from 'src/lib'
+import {Point} from '../types'
+
+const store = {
+  player: {
+    body: null
+  }
+}
+
+const handlePlayer = (app: Application) => {
+  addPlayerToStage(app)
+  addMouseMovement(app)
+}
+
+const addPlayerToStage = (app: Application) => {
+  const sprite = new Sprite(utils.TextureCache['ship.png'])
+
+  sprite.x = window.innerWidth / 2
+  sprite.y = window.innerHeight / 2
+
+  sprite.width = 32
+  sprite.height = 32
+  sprite.anchor.set(0.5)
+  sprite.interactive = true
+  sprite.buttonMode = true
+
+  app.stage.addChild(sprite)
+
+  store.player.body = sprite
+}
+
+const addMouseMovement = (app: Application) => {
+  const MAX_POWER = 200
+  const line1 = drawLine(app)
+  const player: Sprite = store.player.body
+  let moving = false
+  let dragging = false
+  let cursor = {x: 0, y: 0}
+
+  let velX = 0
+  let velY = 0
+
+  player.on('mousedown', (event) => {
+    line1.clear()
+    dragging = true
+  })
+
+  player.on('mousemove', (event) => {
+    if (dragging) {
+      const c = distance({x: player.x, y: player.y}, event.data.global)
+      if (c <= MAX_POWER) {
+        cursor.x = event.data.global.x
+        cursor.y = event.data.global.y
+      }
+    }
+  })
+
+  player.on('mouseupoutside', (event) => {
+    line1.clear()
+    dragging = false
+    moving = true
+
+    const c = distance({x: player.x, y: player.y}, cursor)
+    const power = c / MAX_POWER
+
+    const direction = (cursor.x < player.x) ? 1 : -1
+    velX = 3 * direction * power
+    velY = -10 * power
+  })
+
+  app.ticker.add((delta) => {
+    if (dragging) {
+      updateLine(line1, {x: player.x, y: player.y}, cursor)
+    }
+
+    if (!dragging && moving) {
+      player.x += velX * delta
+
+      velY += 0.2 * delta
+      player.y += velY
+
+      // ground hit
+      if (player.y > window.innerHeight / 2) {
+        moving = false
+      }
+    }
+  })
+}
+
+const drawLine = (app: Application) => {
+  const line = new Graphics()
+
+  line.moveTo(0, 0)
+  line.lineTo(0, 0)
+  line.endFill()
+
+  app.stage.addChild(line)
+
+  return line
+}
+
+const updateLine = (line: Graphics, start: Point, end: Point, color = 0xffffff) => {
+  line.clear()
+  line.lineStyle(2, color)
+  line.moveTo(start.x, start.y)
+  line.lineTo(end.x, end.y)
+  line.endFill()
+}
 
 const GameScreen = () => {
   const body = useRef<HTMLDivElement>()
@@ -12,6 +120,7 @@ const GameScreen = () => {
 
     body.current.appendChild(app.view)
 
+    handlePlayer(app)
   }, [])
 
   return <div ref={body}/>
