@@ -6,7 +6,12 @@ import {Point} from '../types'
 const store = {
   player: {
     body: null
-  }
+  },
+  platforms: [
+    {x: window.innerWidth / 2 - 150, y: window.innerHeight / 2 + 16, w: 300},
+    {x: window.innerWidth / 2 + 150, y: window.innerHeight / 2 - 150, w: 150},
+    {x: window.innerWidth / 2 - 150, y: window.innerHeight / 2 - 300, w: 150},
+  ]
 }
 
 const handlePlayer = (app: Application) => {
@@ -81,10 +86,18 @@ const addMouseMovement = (app: Application) => {
       velY += 0.2 * delta
       player.y += velY
 
-      // ground hit
-      if (player.y > window.innerHeight / 2) {
-        moving = false
-      }
+      // check for collision
+      store.platforms.forEach((platform) => {
+        if (
+          player.x + 16 >= platform.x &&
+          player.x - 16 <= platform.x + platform.w &&
+          player.y + 16 >= platform.y &&
+          player.y - 16 <= platform.y + 10
+        ) {
+          moving = false
+          player.y = platform.y - 16
+        }
+      })
     }
   })
 }
@@ -109,6 +122,22 @@ const updateLine = (line: Graphics, start: Point, end: Point, color = 0xffffff) 
   line.endFill()
 }
 
+const handlePlatforms = (app: Application) => {
+  store.platforms.forEach((platform) => {
+    drawPlatform(app, platform.x, platform.y, platform.w)
+  })
+}
+
+const drawPlatform = (app: Application, x: number, y: number, width: number) => {
+  const graphic = new Graphics()
+  graphic.clear()
+  graphic.beginFill(0xaaaaaa)
+  graphic.drawRect(x, y, width, 10)
+  graphic.endFill()
+
+  app.stage.addChild(graphic)
+}
+
 const GameScreen = () => {
   const body = useRef<HTMLDivElement>()
 
@@ -120,6 +149,7 @@ const GameScreen = () => {
 
     body.current.appendChild(app.view)
 
+    handlePlatforms(app)
     handlePlayer(app)
   }, [])
 
