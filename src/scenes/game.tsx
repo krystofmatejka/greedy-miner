@@ -1,5 +1,5 @@
 import React, {useRef, useEffect, useState} from 'react'
-import {Application, Loader, Sprite, utils, Graphics} from 'pixi.js'
+import {Application, Loader, Sprite, utils, Graphics, Container} from 'pixi.js'
 import {distance} from 'src/lib'
 import {Point} from '../types'
 
@@ -14,12 +14,12 @@ const store = {
   ]
 }
 
-const handlePlayer = (app: Application) => {
-  addPlayerToStage(app)
-  addMouseMovement(app)
+const handlePlayer = (app: Application, camera: Container) => {
+  addPlayerToStage(camera)
+  addMouseMovement(app, camera)
 }
 
-const addPlayerToStage = (app: Application) => {
+const addPlayerToStage = (camera: Container) => {
   const sprite = new Sprite(utils.TextureCache['ship.png'])
 
   sprite.x = window.innerWidth / 2
@@ -31,14 +31,14 @@ const addPlayerToStage = (app: Application) => {
   sprite.interactive = true
   sprite.buttonMode = true
 
-  app.stage.addChild(sprite)
+  camera.addChild(sprite)
 
   store.player.body = sprite
 }
 
-const addMouseMovement = (app: Application) => {
+const addMouseMovement = (app: Application, camera: Container) => {
   const MAX_POWER = 200
-  const line1 = drawLine(app)
+  const line1 = drawLine(camera)
   const player: Sprite = store.player.body
   let moving = false
   let dragging = false
@@ -54,11 +54,11 @@ const addMouseMovement = (app: Application) => {
 
   player.on('mousemove', (event) => {
     if (dragging) {
-      const c = distance({x: player.x, y: player.y}, event.data.global)
-      if (c <= MAX_POWER) {
+      //const c = distance({x: player.x, y: player.y}, event.data.global)
+      //if (c <= MAX_POWER) {
         cursor.x = event.data.global.x
-        cursor.y = event.data.global.y
-      }
+        cursor.y = event.data.global.y + camera.pivot.y
+      //}
     }
   })
 
@@ -98,18 +98,19 @@ const addMouseMovement = (app: Application) => {
           player.y = platform.y - 16
         }
       })
+      camera.pivot.y -= 1
     }
   })
 }
 
-const drawLine = (app: Application) => {
+const drawLine = (camera: Container) => {
   const line = new Graphics()
 
   line.moveTo(0, 0)
   line.lineTo(0, 0)
   line.endFill()
 
-  app.stage.addChild(line)
+  camera.addChild(line)
 
   return line
 }
@@ -122,20 +123,28 @@ const updateLine = (line: Graphics, start: Point, end: Point, color = 0xffffff) 
   line.endFill()
 }
 
-const handlePlatforms = (app: Application) => {
+const handlePlatforms = (app: Application, camera: Container) => {
   store.platforms.forEach((platform) => {
-    drawPlatform(app, platform.x, platform.y, platform.w)
+    drawPlatform(app, camera, platform.x, platform.y, platform.w)
   })
 }
 
-const drawPlatform = (app: Application, x: number, y: number, width: number) => {
+const drawPlatform = (app: Application, camera: Container, x: number, y: number, width: number) => {
   const graphic = new Graphics()
   graphic.clear()
   graphic.beginFill(0xaaaaaa)
   graphic.drawRect(x, y, width, 10)
   graphic.endFill()
 
-  app.stage.addChild(graphic)
+  camera.addChild(graphic)
+}
+
+const createCamera = (app: Application) => {
+  const camera = new Container()
+
+  app.stage.addChild(camera)
+
+  return camera
 }
 
 const GameScreen = () => {
@@ -149,8 +158,9 @@ const GameScreen = () => {
 
     body.current.appendChild(app.view)
 
-    handlePlatforms(app)
-    handlePlayer(app)
+    const camera = createCamera(app)
+    handlePlatforms(app, camera)
+    handlePlayer(app, camera)
   }, [])
 
   return <div ref={body}/>
