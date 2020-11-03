@@ -1,6 +1,6 @@
 import React, {useRef, useEffect, useState} from 'react'
 import {Application, Loader, Sprite, utils, Graphics, Container} from 'pixi.js'
-import {distance} from 'src/lib'
+import {distance, randomRange} from 'src/lib'
 import {Point} from '../types'
 
 const store = {
@@ -98,7 +98,7 @@ const addMouseMovement = (app: Application, camera: Container) => {
           player.y = platform.y - 16
         }
       })
-      camera.pivot.y -= 1
+      camera.pivot.y -= 2
     }
   })
 }
@@ -126,6 +126,19 @@ const updateLine = (line: Graphics, start: Point, end: Point, color = 0xffffff) 
 const handlePlatforms = (app: Application, camera: Container) => {
   store.platforms.forEach((platform) => {
     drawPlatform(app, camera, platform.x, platform.y, platform.w)
+  })
+
+  app.ticker.add(() => {
+    if (
+      camera.pivot.y !== 0 &&
+      camera.pivot.y * -1 % 150 === 0
+    ) {
+      const x = randomRange(window.innerWidth / 2 - 300, window.innerWidth / 2 + 300)
+      const w = randomRange(50, 150)
+      const newPlatform = {x, y: (window.innerHeight / 2) - 300 + camera.pivot.y, w}
+      store.platforms.push(newPlatform)
+      drawPlatform(app, camera, newPlatform.x, newPlatform.y, newPlatform.w)
+    }
   })
 }
 
