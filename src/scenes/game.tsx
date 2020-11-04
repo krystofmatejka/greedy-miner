@@ -96,7 +96,7 @@ const addMouseMovement = (app: Application, camera: Container) => {
           player.y = platform.y - 16
         }
       })
-      camera.pivot.y -= 2
+      camera.pivot.y = player.y - window.innerHeight / 2 - 16
     }
   })
 }
