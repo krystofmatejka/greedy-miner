@@ -4,12 +4,14 @@ import {distance, randomRange} from 'src/lib'
 import {Point} from '../types'
 
 const store = {
+  score: 0,
   player: {
     body: null
   },
   platforms: [
     {x: window.innerWidth / 2 - 150, y: -window.innerHeight / 2, w: 300}
-  ]
+  ],
+  diamonds: []
 }
 
 const handlePlayer = (app: Application, camera: Container) => {
@@ -95,6 +97,21 @@ const addMouseMovement = (app: Application, camera: Container) => {
           player.y = platform.y - 16
         }
       })
+
+      store.diamonds.forEach((diamond) => {
+        if (
+          diamond.visible &&
+          player.x + 16 >= diamond.x &&
+          player.x - 16 <= diamond.x + 10 &&
+          player.y + 16 >= diamond.y &&
+          player.y - 16 <= diamond.y + 10
+        ) {
+          store.score++
+          diamond.visible = false
+          camera.removeChild(diamond.body)
+        }
+      })
+
       camera.pivot.y = player.y - window.innerHeight / 2 - 16
     }
   })
@@ -149,6 +166,36 @@ const drawPlatform = (app: Application, camera: Container, x: number, y: number,
   camera.addChild(graphic)
 }
 
+const handleDiamonds = (app: Application, camera: Container) => {
+  let highestPosition = 0
+
+  app.ticker.add(() => {
+    if (camera.pivot.y < highestPosition) {
+      highestPosition = camera.pivot.y
+      const chance = randomRange(0,10)
+      if (chance >= 9.5) {
+        const x = randomRange(window.innerWidth / 2 - 200, window.innerWidth / 2 + 200)
+        const y = camera.pivot.y
+        const body = createDiamond(camera, x, y)
+        store.diamonds.push({x, y, visible: true, body})
+        camera.addChild(body)
+      }
+    }
+  })
+}
+
+const createDiamond = (camera: Container, x: number, y: number, visible = true) => {
+  const graphic = new Graphics()
+
+  graphic.clear()
+  graphic.beginFill(0x4dd7e8)
+  graphic.drawStar(x, y, 4, 10)
+  graphic.endFill()
+  graphic.visible = visible
+
+  return graphic
+}
+
 const createCamera = (app: Application) => {
   const camera = new Container()
 
@@ -172,6 +219,7 @@ const GameScreen = () => {
 
     const camera = createCamera(app)
     handlePlatforms(app, camera)
+    handleDiamonds(app, camera)
     handlePlayer(app, camera)
   }, [])
 
