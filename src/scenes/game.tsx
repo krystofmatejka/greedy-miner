@@ -95,6 +95,16 @@ const addMouseMovement = (app: Application, camera: Container) => {
           player.y + 16 >= platform.y &&
           player.y - 16 <= platform.y + 10
         ) {
+          velX *= -1
+          velY *= -1
+        }
+
+        if (
+          player.x + 16 >= platform.x &&
+          player.x - 16 <= platform.x + platform.w &&
+          player.y + 16 >= platform.y &&
+          player.y - 16 <= platform.y - 10
+        ) {
           moving = false
           player.y = platform.y - 16
         }
