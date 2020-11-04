@@ -1,10 +1,12 @@
 import React, {useRef, useEffect, useState} from 'react'
-import {Application, Loader, Sprite, utils, Graphics, Container} from 'pixi.js'
+import {Application, Loader, Sprite, utils, Graphics, Container, SCALE_MODES, Text, TextStyle} from 'pixi.js'
 import {distance, randomRange} from 'src/lib'
 import {Point} from '../types'
 
 const store = {
-  score: 0,
+  game: {
+    score: 0
+  },
   player: {
     body: null
   },
@@ -106,7 +108,7 @@ const addMouseMovement = (app: Application, camera: Container) => {
           player.y + 16 >= diamond.y &&
           player.y - 16 <= diamond.y + 10
         ) {
-          store.score++
+          store.game.score++
           diamond.visible = false
           camera.removeChild(diamond.body)
         }
@@ -196,6 +198,57 @@ const createDiamond = (camera: Container, x: number, y: number, visible = true) 
   return graphic
 }
 
+const handleMagma = (app: Application, camera: Container) => {
+  const player: Sprite = store.player.body
+  const magma = drawMagma(app, camera)
+
+  app.ticker.add(() => {
+    magma.y -= 2
+
+    if (
+      player.x + 16 >= magma.x &&
+      player.x - 16 <= magma.x + window.innerWidth &&
+      player.y + 16 >= magma.y &&
+      player.y - 16 <= magma.y + 10
+    ) {
+      app.ticker.destroy()
+    }
+  })
+}
+
+const drawMagma = (app: Application, camera: Container) => {
+  const graphics = new Graphics()
+  graphics.clear()
+  graphics.beginFill(0xff0000)
+  graphics.drawRect(0, 0, window.innerWidth, 10)
+  graphics.endFill()
+
+  const texture = app.renderer.generateTexture(graphics, SCALE_MODES.LINEAR, 1)
+  const magma = new Sprite(texture)
+
+  magma.x = 0
+  magma.y = -10
+
+  camera.addChild(magma)
+
+  return magma
+}
+
+const handleScore = (app: Application, camera: Container) => {
+  const style = new TextStyle({
+    fill: "white"
+  })
+  const text = new Text('score', style)
+  text.x = 0
+
+  camera.addChild(text)
+
+  app.ticker.add(() => {
+    text.y = camera.pivot.y
+    text.text = `score: ${store.game.score}`
+  })
+}
+
 const createCamera = (app: Application) => {
   const camera = new Container()
 
@@ -221,6 +274,8 @@ const GameScreen = () => {
     handlePlatforms(app, camera)
     handleDiamonds(app, camera)
     handlePlayer(app, camera)
+    handleMagma(app, camera)
+    handleScore(app, camera)
   }, [])
 
   return <div ref={body}/>
