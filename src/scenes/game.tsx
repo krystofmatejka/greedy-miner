@@ -8,9 +8,7 @@ const store = {
     body: null
   },
   platforms: [
-    {x: window.innerWidth / 2 - 150, y: window.innerHeight / 2 + 16, w: 300},
-    {x: window.innerWidth / 2 + 150, y: window.innerHeight / 2 - 150, w: 150},
-    {x: window.innerWidth / 2 - 150, y: window.innerHeight / 2 - 300, w: 150},
+    {x: window.innerWidth / 2 - 150, y: -window.innerHeight / 2, w: 300}
   ]
 }
 
@@ -23,7 +21,7 @@ const addPlayerToStage = (camera: Container) => {
   const sprite = new Sprite(utils.TextureCache['ship.png'])
 
   sprite.x = window.innerWidth / 2
-  sprite.y = window.innerHeight / 2
+  sprite.y = camera.pivot.y / 2 - 16
 
   sprite.width = 32
   sprite.height = 32
@@ -129,13 +127,13 @@ const handlePlatforms = (app: Application, camera: Container) => {
   })
 
   app.ticker.add(() => {
-    if (
-      camera.pivot.y !== 0 &&
-      camera.pivot.y * -1 % 150 === 0
-    ) {
-      const x = randomRange(window.innerWidth / 2 - 300, window.innerWidth / 2 + 300)
+    const lastPlatform = store.platforms[store.platforms.length - 1]
+
+    if ((lastPlatform.y > camera.pivot.y)) {
+      const x = randomRange(window.innerWidth / 2 - 200, window.innerWidth / 2 + 200)
+      const y = randomRange(lastPlatform.y - 50, lastPlatform.y - 200,)
       const w = randomRange(50, 150)
-      const newPlatform = {x, y: (window.innerHeight / 2) - 300 + camera.pivot.y, w}
+      const newPlatform = {x, y, w}
       store.platforms.push(newPlatform)
       drawPlatform(app, camera, newPlatform.x, newPlatform.y, newPlatform.w)
     }
@@ -156,6 +154,8 @@ const createCamera = (app: Application) => {
   const camera = new Container()
 
   app.stage.addChild(camera)
+  camera.pivot.x = 0
+  camera.pivot.y = -window.innerHeight
 
   return camera
 }
