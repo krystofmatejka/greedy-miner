@@ -68,8 +68,7 @@ const addMouseMovement = (app: Application, camera: Container) => {
     const c = distance({x: player.x, y: player.y}, cursor)
     const power = c / MAX_POWER
 
-    const direction = (cursor.x < player.x) ? 1 : -1
-    velX = 3 * direction * power
+    velX = 5 * Math.sin(Math.atan2(cursor.y - player.y,cursor.x - player.x) - Math.PI / 2)
     velY = -10 * power
   })
 
