@@ -1,4 +1,13 @@
-import {distance, rightTriangleSides, angleToPoint, randomRange, velocityToPoint, degreeToRadian, radianToDegree} from './math'
+import {
+  distance,
+  rightTriangleSides,
+  angleToPoint,
+  randomRange,
+  velocityToPoint,
+  degreeToRadian,
+  radianToDegree,
+  clamp
+} from './math'
 
 export {
   distance,
@@ -7,5 +16,6 @@ export {
   randomRange,
   velocityToPoint,
   degreeToRadian,
-  radianToDegree
+  radianToDegree,
+  clamp
 }

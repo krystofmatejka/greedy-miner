@@ -1,6 +1,6 @@
 import React, {useRef, useEffect, useState} from 'react'
 import {Application, Loader, Sprite, utils, Graphics, Container, SCALE_MODES, Text, TextStyle} from 'pixi.js'
-import {distance, randomRange} from 'src/lib'
+import {distance, randomRange, clamp} from 'src/lib'
 import {Point} from '../types'
 
 const store = {
@@ -39,7 +39,7 @@ const addPlayerToStage = (camera: Container) => {
 }
 
 const addMouseMovement = (app: Application, camera: Container) => {
-  const MAX_POWER = 200
+  const MAX_POWER = 300
   const line1 = drawLine(camera)
   const player: Sprite = store.player.body
   let moving = false
@@ -56,11 +56,8 @@ const addMouseMovement = (app: Application, camera: Container) => {
 
   player.on('mousemove', (event) => {
     if (dragging) {
-      //const c = distance({x: player.x, y: player.y}, event.data.global)
-      //if (c <= MAX_POWER) {
-        cursor.x = event.data.global.x
-        cursor.y = event.data.global.y + camera.pivot.y
-      //}
+      cursor.x = event.data.global.x
+      cursor.y = event.data.global.y + camera.pivot.y
     }
   })
 
@@ -70,9 +67,11 @@ const addMouseMovement = (app: Application, camera: Container) => {
     moving = true
 
     const c = distance({x: player.x, y: player.y}, cursor)
-    const power = c / MAX_POWER
+    const power = Math.min(c, MAX_POWER) / MAX_POWER
 
-    velX = 5 * Math.sin(Math.atan2(cursor.y - player.y,cursor.x - player.x) - Math.PI / 2)
+    const sin = Math.sin(Math.atan2(cursor.y - player.y,cursor.x - player.x) - Math.PI / 2)
+    const sinWithMaxValue = clamp(sin, -0.5, 0.5)
+    velX = 5 * sinWithMaxValue
     velY = -10 * power
   })
 
@@ -90,20 +89,11 @@ const addMouseMovement = (app: Application, camera: Container) => {
       // check for collision
       store.platforms.forEach((platform) => {
         if (
+          velY >= 0 &&
           player.x + 16 >= platform.x &&
           player.x - 16 <= platform.x + platform.w &&
           player.y + 16 >= platform.y &&
           player.y - 16 <= platform.y + 10
-        ) {
-          velX *= -1
-          velY *= -1
-        }
-
-        if (
-          player.x + 16 >= platform.x &&
-          player.x - 16 <= platform.x + platform.w &&
-          player.y + 16 >= platform.y &&
-          player.y - 16 <= platform.y - 10
         ) {
           moving = false
           player.y = platform.y - 16
@@ -213,7 +203,7 @@ const handleMagma = (app: Application, camera: Container) => {
   const magma = drawMagma(app, camera)
 
   app.ticker.add(() => {
-    magma.y -= 2
+    magma.y -= 1
 
     if (
       player.x + 16 >= magma.x &&

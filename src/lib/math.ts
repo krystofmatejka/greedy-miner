@@ -39,3 +39,5 @@ export const angleToPoint = (a: Point, b: Point) => {
 }
 
 export const randomRange = (min: number, max: number) => Math.random() * (max - min) + min
+
+export const clamp = (value: number, min: number, max: number) => Math.max(Math.min(value, max), min)
