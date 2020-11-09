@@ -22,7 +22,7 @@ const handlePlayer = (app: Application, camera: Container) => {
 }
 
 const addPlayerToStage = (camera: Container) => {
-  const sprite = new Sprite(utils.TextureCache['ship.png'])
+  const sprite = new Sprite(utils.TextureCache['ship'])
 
   sprite.x = window.innerWidth / 2
   sprite.y = camera.pivot.y / 2 - 16
@@ -159,13 +159,14 @@ const handlePlatforms = (app: Application, camera: Container) => {
 }
 
 const drawPlatform = (app: Application, camera: Container, x: number, y: number, width: number) => {
-  const graphic = new Graphics()
-  graphic.clear()
-  graphic.beginFill(0xaaaaaa)
-  graphic.drawRect(x, y, width, 10)
-  graphic.endFill()
+  const sprite = new Sprite(utils.TextureCache['platform'])
 
-  camera.addChild(graphic)
+  sprite.x = x
+  sprite.y = y
+  sprite.width = width
+  sprite.height = 16
+
+  camera.addChild(sprite)
 }
 
 const handleDiamonds = (app: Application, camera: Container) => {
@@ -286,7 +287,10 @@ export const Game = () => {
 
   useEffect(() => {
     const loader = new Loader()
-    loader.add(['ship.png']).load(() => {
+    loader
+      .add('ship', 'ship.png')
+      .add('platform', 'platform.png')
+      .load(() => {
       setLoaded(true)
     })
   }, [])
