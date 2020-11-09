@@ -1,5 +1,5 @@
 import React, {useRef, useEffect, useState} from 'react'
-import {Application, Loader, Sprite, utils, Graphics, Container, SCALE_MODES, Text, TextStyle} from 'pixi.js'
+import {Application, Loader, Sprite, utils, Graphics, Container, SCALE_MODES, Text, TextStyle, filters, Rectangle} from 'pixi.js'
 import {distance, randomRange, clamp} from 'src/lib'
 import {Point} from '../types'
 
@@ -16,12 +16,12 @@ const store = {
   diamonds: []
 }
 
-const handlePlayer = (app: Application, camera: Container) => {
-  addPlayerToStage(camera)
-  addMouseMovement(app, camera)
+const handlePlayer = (app: Application, camera: Container, focus) => {
+  addPlayerToStage(camera, focus)
+  addMouseMovement(app, camera, focus)
 }
 
-const addPlayerToStage = (camera: Container) => {
+const addPlayerToStage = (camera: Container, focus) => {
   const sprite = new Sprite(utils.TextureCache['ship'])
 
   sprite.x = window.innerWidth / 2
@@ -32,13 +32,14 @@ const addPlayerToStage = (camera: Container) => {
   sprite.anchor.set(0.5)
   sprite.interactive = true
   sprite.buttonMode = true
+  sprite.mask = focus
 
   camera.addChild(sprite)
 
   store.player.body = sprite
 }
 
-const addMouseMovement = (app: Application, camera: Container) => {
+const addMouseMovement = (app: Application, camera: Container, focus) => {
   const MAX_POWER = 300
   const line1 = drawLine(camera)
   const player: Sprite = store.player.body
@@ -75,6 +76,8 @@ const addMouseMovement = (app: Application, camera: Container) => {
     velY = -10 * power
   })
 
+  focus.position.x = player.x - focus.width / 2
+  focus.position.y = player.y - focus.height / 2
   app.ticker.add((delta) => {
     if (dragging) {
       updateLine(line1, {x: player.x, y: player.y}, cursor)
@@ -85,6 +88,9 @@ const addMouseMovement = (app: Application, camera: Container) => {
 
       velY += 0.2 * delta
       player.y += velY
+
+      focus.position.x = player.x - focus.width / 2
+      focus.position.y = player.y - focus.height / 2
 
       // check for collision
       store.platforms.forEach((platform) => {
@@ -139,9 +145,9 @@ const updateLine = (line: Graphics, start: Point, end: Point, color = 0xffffff) 
   line.endFill()
 }
 
-const handlePlatforms = (app: Application, camera: Container) => {
+const handlePlatforms = (app: Application, camera: Container, focus) => {
   store.platforms.forEach((platform) => {
-    drawPlatform(app, camera, platform.x, platform.y, platform.w)
+    drawPlatform(app, camera, platform.x, platform.y, platform.w, focus)
   })
 
   app.ticker.add(() => {
@@ -153,23 +159,24 @@ const handlePlatforms = (app: Application, camera: Container) => {
       const w = randomRange(50, 150)
       const newPlatform = {x, y, w}
       store.platforms.push(newPlatform)
-      drawPlatform(app, camera, newPlatform.x, newPlatform.y, newPlatform.w)
+      drawPlatform(app, camera, newPlatform.x, newPlatform.y, newPlatform.w, focus)
     }
   })
 }
 
-const drawPlatform = (app: Application, camera: Container, x: number, y: number, width: number) => {
+const drawPlatform = (app: Application, camera: Container, x: number, y: number, width: number, focus) => {
   const sprite = new Sprite(utils.TextureCache['platform'])
 
   sprite.x = x
   sprite.y = y
   sprite.width = width
   sprite.height = 16
+  sprite.mask = focus
 
   camera.addChild(sprite)
 }
 
-const handleDiamonds = (app: Application, camera: Container) => {
+const handleDiamonds = (app: Application, camera: Container, focus) => {
   let highestPosition = 0
 
   app.ticker.add(() => {
@@ -179,7 +186,7 @@ const handleDiamonds = (app: Application, camera: Container) => {
       if (chance >= 9.5) {
         const x = randomRange(window.innerWidth / 2 - 200, window.innerWidth / 2 + 200)
         const y = camera.pivot.y
-        const body = createDiamond(camera, x, y)
+        const body = createDiamond(camera, x, y, true, focus)
         store.diamonds.push({x, y, visible: true, body})
         camera.addChild(body)
       }
@@ -187,7 +194,7 @@ const handleDiamonds = (app: Application, camera: Container) => {
   })
 }
 
-const createDiamond = (camera: Container, x: number, y: number, visible = true) => {
+const createDiamond = (camera: Container, x: number, y: number, visible = true, focus) => {
   const graphic = new Graphics()
 
   graphic.clear()
@@ -195,13 +202,14 @@ const createDiamond = (camera: Container, x: number, y: number, visible = true) 
   graphic.drawStar(x, y, 4, 10)
   graphic.endFill()
   graphic.visible = visible
+  graphic.mask = focus
 
   return graphic
 }
 
-const handleMagma = (app: Application, camera: Container) => {
+const handleMagma = (app: Application, camera: Container, focus) => {
   const player: Sprite = store.player.body
-  const magma = drawMagma(app, camera)
+  const magma = drawMagma(app, camera, focus)
 
   app.ticker.add(() => {
     magma.y -= 1
@@ -217,18 +225,19 @@ const handleMagma = (app: Application, camera: Container) => {
   })
 }
 
-const drawMagma = (app: Application, camera: Container) => {
+const drawMagma = (app: Application, camera: Container, focus) => {
   const graphics = new Graphics()
   graphics.clear()
   graphics.beginFill(0xff0000)
-  graphics.drawRect(0, 0, window.innerWidth, 10)
+  graphics.drawRect(0, 0, window.innerWidth, window.innerHeight)
   graphics.endFill()
 
   const texture = app.renderer.generateTexture(graphics, SCALE_MODES.LINEAR, 1)
   const magma = new Sprite(texture)
+  magma.mask = focus
 
   magma.x = 0
-  magma.y = -10
+  magma.y = 0
 
   camera.addChild(magma)
 
@@ -237,7 +246,7 @@ const drawMagma = (app: Application, camera: Container) => {
 
 const handleScore = (app: Application, camera: Container) => {
   const style = new TextStyle({
-    fill: "white"
+    fill: 'white'
   })
   const text = new Text('score', style)
   text.x = 0
@@ -260,6 +269,42 @@ const createCamera = (app: Application) => {
   return camera
 }
 
+const createFocus = (app: Application, camera: Container) => {
+  const radius = 250
+  const blurSize = 64
+
+  const circle = new Graphics()
+    .beginFill(0xffffff)
+    .drawCircle(radius + blurSize, radius + blurSize, radius)
+    .endFill();
+  circle.filters = [new filters.BlurFilter(blurSize)];
+
+  const bounds = new Rectangle(0, 0, (radius + blurSize) * 2, (radius + blurSize) * 2)
+  const texture = app.renderer.generateTexture(circle, SCALE_MODES.NEAREST, 1, bounds)
+  const focus = new Sprite(texture)
+  focus.alpha = 1
+  camera.addChild(focus)
+
+  return focus
+}
+
+const createBackground = (app: Application, camera: Container, focus) => {
+  const graphics = new Graphics()
+  graphics.clear()
+  graphics.beginFill(0x000000)
+  graphics.drawRect(0, 0, window.innerWidth, window.innerHeight)
+  graphics.endFill()
+
+  const textureBackground = app.renderer.generateTexture(graphics, SCALE_MODES.NEAREST, 1)
+
+  const background = new Sprite(textureBackground)
+  camera.addChild(background)
+  background.width = app.screen.width
+  background.height = app.screen.height
+
+  background.mask = focus
+}
+
 const GameScreen = () => {
   const body = useRef<HTMLDivElement>()
 
@@ -272,10 +317,13 @@ const GameScreen = () => {
     body.current.appendChild(app.view)
 
     const camera = createCamera(app)
-    handlePlatforms(app, camera)
-    handleDiamonds(app, camera)
-    handlePlayer(app, camera)
-    handleMagma(app, camera)
+    const focus = createFocus(app, camera)
+
+    createBackground(app, camera, focus)
+    handlePlatforms(app, camera, focus)
+    handleDiamonds(app, camera, focus)
+    handlePlayer(app, camera, focus)
+    handleMagma(app, camera, focus)
     handleScore(app, camera)
   }, [])
 
