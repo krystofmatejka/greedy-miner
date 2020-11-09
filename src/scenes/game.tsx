@@ -3,6 +3,8 @@ import {Application, Loader, Sprite, utils, Graphics, Container, SCALE_MODES, Te
 import {distance, randomRange, clamp} from 'src/lib'
 import {Point} from '../types'
 
+const MAX_POWER = 300
+
 const store = {
   game: {
     score: 0
@@ -33,6 +35,7 @@ const addPlayerToStage = (camera: Container, focus) => {
   sprite.interactive = true
   sprite.buttonMode = true
   sprite.mask = focus
+  sprite.zIndex = 10
 
   camera.addChild(sprite)
 
@@ -40,19 +43,21 @@ const addPlayerToStage = (camera: Container, focus) => {
 }
 
 const addMouseMovement = (app: Application, camera: Container, focus) => {
-  const MAX_POWER = 300
-  const line1 = drawLine(camera)
+  const line = drawLine(camera)
   const player: Sprite = store.player.body
   let moving = false
   let dragging = false
-  let cursor = {x: 0, y: 0}
+  let cursor = {x: player.x, y: player.y}
 
   let velX = 0
   let velY = 0
 
   player.on('mousedown', (event) => {
-    line1.clear()
-    dragging = true
+    if (!moving) {
+      dragging = true
+      cursor.x = player.x
+      cursor.y = player.y
+    }
   })
 
   player.on('mousemove', (event) => {
@@ -62,25 +67,32 @@ const addMouseMovement = (app: Application, camera: Container, focus) => {
     }
   })
 
-  player.on('mouseupoutside', (event) => {
-    line1.clear()
+  player.on('mouseup', (event) => {
+    line.clear()
     dragging = false
-    moving = true
+  })
 
-    const c = distance({x: player.x, y: player.y}, cursor)
-    const power = Math.min(c, MAX_POWER) / MAX_POWER
+  player.on('mouseupoutside', (event) => {
+    if (!moving) {
+      line.clear()
+      dragging = false
+      moving = true
 
-    const sin = Math.sin(Math.atan2(cursor.y - player.y,cursor.x - player.x) - Math.PI / 2)
-    const sinWithMaxValue = clamp(sin, -0.5, 0.5)
-    velX = 5 * sinWithMaxValue
-    velY = -10 * power
+      const c = distance({x: player.x, y: player.y}, cursor)
+      const power = Math.min(c, MAX_POWER) / MAX_POWER
+
+      const sin = Math.sin(Math.atan2(cursor.y - player.y,cursor.x - player.x) - Math.PI / 2)
+      const sinWithMaxValue = clamp(sin, -0.5, 0.5)
+      velX = 5 * sinWithMaxValue
+      velY = -10 * power
+    }
   })
 
   focus.position.x = player.x - focus.width / 2
   focus.position.y = player.y - focus.height / 2
   app.ticker.add((delta) => {
     if (dragging) {
-      updateLine(line1, {x: player.x, y: player.y}, cursor)
+      updateLine(line, {x: player.x, y: player.y}, cursor)
     }
 
     if (!dragging && moving) {
@@ -131,15 +143,19 @@ const drawLine = (camera: Container) => {
   line.moveTo(0, 0)
   line.lineTo(0, 0)
   line.endFill()
+  line.zIndex = 1
 
   camera.addChild(line)
 
   return line
 }
 
-const updateLine = (line: Graphics, start: Point, end: Point, color = 0xffffff) => {
+const updateLine = (line: Graphics, start: Point, end: Point) => {
+  const c = distance(start, end)
+  const power = Math.min(c, MAX_POWER) / MAX_POWER
+
   line.clear()
-  line.lineStyle(2, color)
+  line.lineStyle(5 * power, 0xffffff)
   line.moveTo(start.x, start.y)
   line.lineTo(end.x, end.y)
   line.endFill()
@@ -265,6 +281,7 @@ const createCamera = (app: Application) => {
   app.stage.addChild(camera)
   camera.pivot.x = 0
   camera.pivot.y = -window.innerHeight
+  camera.sortableChildren = true
 
   return camera
 }
