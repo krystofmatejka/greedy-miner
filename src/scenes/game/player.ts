@@ -69,7 +69,7 @@ const addMouseMovement = (app: Application, camera: Container, focus) => {
       const power = Math.min(c, MAX_POWER) / MAX_POWER
 
       const sin = Math.sin(Math.atan2(cursor.y - player.y,cursor.x - player.x) - Math.PI / 2)
-      const sinWithMaxValue = clamp(sin, -0.5, 0.5)
+      const sinWithMaxValue = clamp(sin, -0.75, 0.75)
       velX = 5 * sinWithMaxValue
       velY = -10 * power
     }
@@ -119,6 +119,20 @@ const addMouseMovement = (app: Application, camera: Container, focus) => {
           camera.removeChild(diamond.body)
         }
       })
+
+      if (player.x <= store.boundaries.left) {
+        velX *= -1
+        if (velY <= 0) {
+          velY = -10
+        }
+      }
+
+      if (player.x >= store.boundaries.right) {
+        velX *= -1
+        if (velY <= 0) {
+          velY = -10
+        }
+      }
 
       camera.pivot.y = player.y - window.innerHeight / 2 - 16
     }

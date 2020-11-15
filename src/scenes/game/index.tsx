@@ -2,12 +2,13 @@ import React, {useEffect, useRef, useState} from 'react'
 import {Application, Loader} from 'pixi.js'
 import {createCamera} from './camera'
 import {createFocus} from './focus'
-import {createBackground} from './background'
+import {handleBackground} from './background'
 import {handlePlatforms} from './platforms'
 import {handleDiamonds} from './diamonds'
 import {handlePlayer} from './player'
 import {handleMagma} from './magma'
 import {handleScore} from './score'
+import {handleWalls} from './walls'
 
 const GameScreen = () => {
   const body = useRef<HTMLDivElement>()
@@ -23,12 +24,13 @@ const GameScreen = () => {
     const camera = createCamera(app)
     const focus = createFocus(app, camera)
 
-    createBackground(app, camera, focus)
+    handleBackground(app, camera, focus)
     handlePlatforms(app, camera, focus)
     handleDiamonds(app, camera, focus)
     handlePlayer(app, camera, focus)
     handleMagma(app, camera, focus)
     handleScore(app, camera)
+    handleWalls(app, camera, focus)
   }, [])
 
   return <div ref={body}/>

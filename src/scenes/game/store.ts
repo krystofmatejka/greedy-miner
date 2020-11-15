@@ -8,5 +8,9 @@ export const store = {
   platforms: [
     {x: window.innerWidth / 2 - 150, y: -window.innerHeight / 2, w: 300}
   ],
-  diamonds: []
+  diamonds: [],
+  boundaries: {
+    left: 0,
+    right: 0
+  }
 }
