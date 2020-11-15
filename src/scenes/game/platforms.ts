@@ -2,6 +2,8 @@ import {Application, Container, Sprite, utils} from 'pixi.js'
 import {randomRange} from '../../lib'
 import {store} from './store'
 
+const MAX_WIDTH = 128
+
 export const handlePlatforms = (app: Application, camera: Container, focus) => {
   store.platforms.forEach((platform) => {
     drawPlatform(app, camera, platform.x, platform.y, platform.w, focus)
@@ -11,9 +13,9 @@ export const handlePlatforms = (app: Application, camera: Container, focus) => {
     const lastPlatform = store.platforms[store.platforms.length - 1]
 
     if ((lastPlatform.y > camera.pivot.y)) {
-      const x = randomRange(window.innerWidth / 2 - 200, window.innerWidth / 2 + 200)
-      const y = randomRange(lastPlatform.y - 50, lastPlatform.y - 200,)
-      const w = randomRange(50, 150)
+      const x = randomRange(store.boundaries.left, store.boundaries.right - MAX_WIDTH)
+      const y = randomRange(lastPlatform.y - 100, lastPlatform.y - 150,)
+      const w = randomRange(48, MAX_WIDTH)
       const newPlatform = {x, y, w}
       store.platforms.push(newPlatform)
       drawPlatform(app, camera, newPlatform.x, newPlatform.y, newPlatform.w, focus)

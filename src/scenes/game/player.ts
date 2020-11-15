@@ -71,7 +71,7 @@ const addMouseMovement = (app: Application, camera: Container, focus) => {
       const sin = Math.sin(Math.atan2(cursor.y - player.y,cursor.x - player.x) - Math.PI / 2)
       const sinWithMaxValue = clamp(sin, -0.75, 0.75)
       velX = 5 * sinWithMaxValue
-      velY = -10 * power
+      velY = -(10 + ((store.game.multiplier + 1) * 0.2)) * power
     }
   })
 
@@ -113,24 +113,18 @@ const addMouseMovement = (app: Application, camera: Container, focus) => {
           player.y + 16 >= diamond.y &&
           player.y - 16 <= diamond.y + 10
         ) {
-          velY = -10
-          store.game.score++
+          velY = -(10 + ((store.game.multiplier + 1) * 0.2))
+          store.game.multiplier++
+          store.game.lastMultiplierTime = performance.now()
           diamond.visible = false
           camera.removeChild(diamond.body)
         }
       })
 
-      if (player.x <= store.boundaries.left) {
+      if (player.x <= store.boundaries.left || player.x >= store.boundaries.right) {
         velX *= -1
         if (velY <= 0) {
-          velY = -10
-        }
-      }
-
-      if (player.x >= store.boundaries.right) {
-        velX *= -1
-        if (velY <= 0) {
-          velY = -10
+          velY = -(10 + ((store.game.multiplier + 1) * 0.2))
         }
       }
 

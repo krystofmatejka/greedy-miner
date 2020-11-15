@@ -2,6 +2,8 @@ import {Application, Container, Graphics} from 'pixi.js'
 import {randomRange} from '../../lib'
 import {store} from './store'
 
+const COMBO_DURATION_MS = 10000
+
 export const handleDiamonds = (app: Application, camera: Container, focus) => {
   let highestPosition = 0
 
@@ -16,6 +18,14 @@ export const handleDiamonds = (app: Application, camera: Container, focus) => {
         store.diamonds.push({x, y, visible: true, body})
         camera.addChild(body)
       }
+
+      const rawScore = (highestPosition * -1) - 995
+      store.game.score = Math.floor(rawScore + (rawScore * (store.game.multiplier + 1) * 0.2))
+    }
+
+    store.game.multiplierRemainingTime = (store.game.lastMultiplierTime + COMBO_DURATION_MS) - performance.now()
+    if (store.game.multiplier > 0 && store.game.multiplierRemainingTime < 1) {
+      store.game.multiplier = 0
     }
   })
 }
