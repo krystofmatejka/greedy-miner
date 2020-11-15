@@ -6,7 +6,11 @@ export const handleMagma = (app: Application, camera: Container, focus) => {
   const magma = drawMagma(app, camera, focus)
 
   app.ticker.add(() => {
-    magma.y -= 1
+    if (magma.y - camera.pivot.y >= 1000) {
+      magma.y -= 10
+    } else {
+      magma.y -= 1
+    }
 
     if (
       player.x + 16 >= magma.x &&

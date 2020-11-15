@@ -17,7 +17,10 @@ export const handleScore = (app: Application, camera: Container) => {
 
     status.y = camera.pivot.y + 70
     if (store.game.multiplier > 0) {
-      status.width = store.game.multiplierRemainingTime / 100
+      const width = Math.floor(store.game.multiplierRemainingTime / 100)
+      if (width > 1) {
+        status.width = width
+      }
     }
   })
 }
@@ -34,7 +37,7 @@ const drawComboStatus = (app: Application, camera: Container) => {
   status.x = 0
   status.y = 0
 
-  status.width = 0
+  status.width = 1
   status.height = 10
 
   camera.addChild(status)
