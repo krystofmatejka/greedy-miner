@@ -1,7 +1,7 @@
 import {Application, Container, Graphics, SCALE_MODES, Sprite} from 'pixi.js'
 import {store} from './store'
 
-const GAME_WIDTH = 600
+const GAME_WIDTH = 500
 
 export const handleWalls = (app: Application, camera: Container, focus) => {
   const {leftWall, rightWall} = drawWalls(app, camera)
