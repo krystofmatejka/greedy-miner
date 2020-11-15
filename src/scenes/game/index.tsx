@@ -29,8 +29,8 @@ const GameScreen = () => {
     handleDiamonds(app, camera, focus)
     handlePlayer(app, camera, focus)
     handleMagma(app, camera, focus)
-    handleScore(app, camera)
     handleWalls(app, camera, focus)
+    handleScore(app, camera)
   }, [])
 
   return <div ref={body}/>
