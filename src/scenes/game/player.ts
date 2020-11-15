@@ -113,6 +113,7 @@ const addMouseMovement = (app: Application, camera: Container, focus) => {
           player.y + 16 >= diamond.y &&
           player.y - 16 <= diamond.y + 10
         ) {
+          velY = -10
           store.game.score++
           diamond.visible = false
           camera.removeChild(diamond.body)
